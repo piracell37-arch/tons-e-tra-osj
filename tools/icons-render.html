@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Gerador de icones e splash</title>
+</head>
+<body>
+<pre id="out">renderizando…</pre>
+<script>
+/* Renderiza o icone do app em todos os tamanhos que o Android exige e devolve
+   um payload JSON { "caminho/relativo.png": "base64" }. Rode esta pagina no
+   navegador e salve o resultado em resources/android/_payload.json; depois
+   `npm run icons` expande o payload em resources/ e copia para android/.
+
+   A arte e a mesma de www/icons/app-icon.svg (castelo + estrela), descrita aqui
+   em SVG para poder ser recortada nos formatos que o Android pede. */
+const CREST = `
+  <g stroke="#f6d98a" stroke-width="14" fill="none" stroke-linejoin="round">
+    <path d="M150 386 V214 l56 -58 56 58 v172" fill="#e9d7ad"/>
+    <path d="M106 386 V252 l44 -46 44 46 v134" fill="#f2e4c2" stroke="none"/>
+    <path d="M318 386 V252 l44 -46 44 46 v134" fill="#f2e4c2" stroke="none"/>
+    <path d="M106 252 l44 -46 44 46 -44 18z" fill="#d9647e" stroke="none"/>
+    <path d="M318 252 l44 -46 44 46 -44 18z" fill="#d9647e" stroke="none"/>
+    <path d="M150 214 l56 -58 56 58 -56 20z" fill="#d9647e" stroke="none"/>
+    <path d="M256 400 v-56 q0 -22 -22 -22 h-22" stroke="#f6d98a"/>
+  </g>
+  <g fill="#f6d98a">
+    <path d="M256 96 l16 40 42 6 -31 29 9 42 -36-22 -36 22 9-42 -31-29 42-6z"/>
+    <circle cx="118" cy="120" r="8"/>
+    <circle cx="396" cy="140" r="10"/>
+    <circle cx="356" cy="86" r="6"/>
+  </g>
+  <rect x="86" y="386" width="340" height="34" rx="10" fill="#2c7f7a"/>`;
+
+const DEFS = `<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+  <stop offset="0" stop-color="#2b4d86"/><stop offset="1" stop-color="#17304f"/></linearGradient></defs>`;
+
+/* variante: recorte do fundo + escala do desenho central */
+const svg = (bg, body, extra = '') =>
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">${DEFS}${bg}${extra}${body}</svg>`;
+
+/* splash: canvas 9:16 com o fundo em tela cheia e o desenho centralizado sem distorcao */
+const splashSvg = (w, h) => {
+  const s = (Math.min(w, h) / 512) * 0.78;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${DEFS}` +
+    `<rect width="${w}" height="${h}" fill="url(#sky)"/>` +
+    `<g transform="translate(${w / 2} ${h / 2 + 40}) scale(${s}) translate(-256 -256)">${CREST}</g></svg>`;
+};
+
+const SQUARE = { bg: `<rect width="512" height="512" rx="112" fill="url(#sky)"/>`, body: CREST };
+const ROUND = { bg: `<circle cx="256" cy="256" r="256" fill="url(#sky)"/>`, body: CREST };
+const FOREGROUND = { bg: '', body: `<g transform="translate(256 262) scale(0.72) translate(-256 -256)">${CREST}</g>` };
+
+const jobs = [];
+const push = (path, spec, w, h) => jobs.push({ path, w, h, src: svg(spec.bg, spec.body) });
+
+/* legados (Android 7/8 sem adaptive icon) */
+const DENSITIES = { mdpi: 48, hdpi: 72, xhdpi: 96, xxhdpi: 144, xxxhdpi: 192 };
+for (const [d, px] of Object.entries(DENSITIES)) {
+  push(`android/mipmap-${d}/ic_launcher.png`, SQUARE, px, px);
+  push(`android/mipmap-${d}/ic_launcher_round.png`, ROUND, px, px);
+}
+/* adaptive icon: foreground em canvas de 108dp (o fundo e uma cor, nao PNG) */
+const FG = { mdpi: 81, hdpi: 122, xhdpi: 162, xxhdpi: 324, xxxhdpi: 432 };
+for (const [d, px] of Object.entries(FG)) push(`android/mipmap-${d}/ic_launcher_foreground.png`, FOREGROUND, px, px);
+
+/* splash: 9:16 em cada bucket; o app usa CENTER_CROP */
+const SPLASH = { mdpi: [480, 854], hdpi: [720, 1280], xhdpi: [960, 1707], xxhdpi: [1440, 2560] };
+for (const [d, [w, h]] of Object.entries(SPLASH)) jobs.push({ path: `android/drawable-${d}/splash.png`, w, h, src: splashSvg(w, h) });
+
+/* materiais da ficha da Play: icone 512 sem transparencia nem cantos arredondados */
+push('play/store-icon-512.png', { bg: `<rect width="512" height="512" fill="url(#sky)"/>`, body: CREST }, 512, 512);
+
+function rasterize(src, w, h) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      const ctx = cv.getContext('2d');
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(cv.toDataURL('image/png').split(',')[1]);
+    };
+    img.onerror = () => reject(new Error('falha ao rasterizar'));
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src);
+  });
+}
+
+(async () => {
+  const out = {};
+  for (const j of jobs) out[j.path] = await rasterize(j.src, j.w, j.h);
+  window.ICON_PAYLOAD = JSON.stringify(out);
+  const bytes = Object.values(out).reduce((a, b) => a + b.length, 0);
+  document.getElementById('out').textContent =
+    'OK ' + Object.keys(out).length + ' arquivos, ' + Math.round(bytes / 1024) + ' KB em base64';
+})();
+</script>
+</body>
+</html>

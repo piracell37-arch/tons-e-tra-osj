@@ -1,0 +1,17 @@
+{
+  "name": "Traço & Tom — Colorir por Números",
+  "short_name": "Traço & Tom",
+  "description": "Jogo de colorir por números com ilustrações vetoriais originais, offline e sem fotos.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f4f1e8",
+  "theme_color": "#203a5c",
+  "lang": "pt-BR",
+  "categories": ["games", "education", "entertainment"],
+  "icons": [
+    { "src": "icons/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icons/app-icon-maskable.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

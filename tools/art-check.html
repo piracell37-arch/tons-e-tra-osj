@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>check arte</title>
+<style>
+  body { margin:0; background:#eef1f6; font-family:Arial, sans-serif; }
+  .grid { display:grid; grid-template-columns:repeat(4, 1fr); gap:8px; padding:8px; }
+  .cell { background:#fff; border:1px solid #ccd; }
+  .cell h3 { margin:0; padding:4px 6px; font-size:11px; color:#345; border-bottom:1px solid #eef; }
+  .cell svg { display:block; width:100%; height:230px; }
+  .lbl { font-size:8px; font-weight:700; fill:#1a2740; }
+  .reg { stroke:#2b3a55; stroke-width:1.4; }
+</style>
+</head>
+<body>
+<div class="grid" id="grid"></div>
+<script src="../www/js/config.js"></script>
+<script src="../www/js/art-core.js"></script>
+<script src="../www/js/art-library.js"></script>
+<script>
+  const LIB = window.DrawingLibrary, NS = 'http://www.w3.org/2000/svg', VB = window.Art.VB;
+  const grid = document.getElementById('grid');
+  const R = [];
+  LIB.list.forEach(def => {
+    const issues = [];
+    let regions = [], ink = [];
+    try {
+      const r = def.regions();
+      regions = Array.isArray(r) ? r : r.list;
+      ink = def.ink ? def.ink() : [];
+    } catch (e) { issues.push('THROW:' + e.message); }
+
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const h = document.createElement('h3');
+    cell.appendChild(h);
+    const svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + VB + ' ' + VB);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    cell.appendChild(svg);
+
+    const paths = [];
+    regions.forEach(r => {
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('class', 'reg');
+      p.setAttribute('d', r.d);
+      const k = ((r.n - 1) % def.palette.length + def.palette.length) % def.palette.length;
+      p.setAttribute('fill', def.palette[k][1]);
+      svg.appendChild(p); paths.push(p);
+    });
+    ink.forEach(d => {
+      const p = document.createElementNS(NS, 'path');
+      p.setAttribute('d', d);
+      p.setAttribute('fill', 'none');
+      p.setAttribute('stroke', '#20304a');
+      p.setAttribute('stroke-width', '1.1');
+      p.setAttribute('opacity', '.4');
+      svg.appendChild(p);
+    });
+    regions.forEach(r => {
+      const t = document.createElementNS(NS, 'text');
+      t.setAttribute('class', 'lbl');
+      t.setAttribute('x', r.x); t.setAttribute('y', r.y);
+      t.setAttribute('text-anchor', 'middle');
+      t.setAttribute('dominant-baseline', 'central');
+      t.textContent = r.n;
+      svg.appendChild(t);
+    });
+    grid.appendChild(cell);
+
+    const nums = regions.map(r => r.n);
+    const max = nums.reduce((m, n) => Math.max(m, n), 0);
+    const min = nums.reduce((m, n) => Math.min(m, n), 99);
+    if (/NaN|Infinity/.test(JSON.stringify(regions) + JSON.stringify(ink))) issues.push('NaN');
+    if (!regions.length) issues.push('SEM-REGIOES');
+    if (max > def.palette.length) issues.push('COR-INVALIDA:' + max + '>' + def.palette.length);
+    if (regions.length && min < 1) issues.push('COR-0');
+    paths.forEach((p, i) => {
+      const b = p.getBBox();
+      if (b.x < -2 || b.y < -2 || b.x + b.width > VB + 2 || b.y + b.height > VB + 2)
+        issues.push('FORA' + i + ':' + [Math.round(b.x), Math.round(b.y), Math.round(b.width), Math.round(b.height)].join(','));
+      if (b.width < 4 || b.height < 4) issues.push('MENOR' + i);
+    });
+    const all = svg.getBBox();
+    R.push({
+      id: def.id, pack: def.pack, regions: regions.length, colors: def.palette.length,
+      bbox: [Math.round(all.x), Math.round(all.y), Math.round(all.width), Math.round(all.height)],
+      coresSemUso: def.palette.length - new Set(nums).size, issues
+    });
+    h.textContent = def.id + ' r=' + regions.length + ' c=' + def.palette.length + (issues.length ? ' ✗' : '');
+    if (issues.length) h.style.color = '#c00';
+  });
+  window.ART_REPORT = R;
+</script>
+</body>
+</html>

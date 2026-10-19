@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#203a5c">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Jogo de colorir por números com 31 ilustrações vetoriais originais: castelos, animais, mar, doces e foguetes. Offline, sem fotos e sem arte gerada por IA.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="icons/app-icon.svg">
+  <link rel="apple-touch-icon" href="icons/app-icon.svg">
+  <title>Traço &amp; Tom — Colorir por Números</title>
+  <link rel="stylesheet" href="styles/app.css">
+</head>
+<body>
+  <canvas id="confetti-canvas" aria-hidden="true"></canvas>
+
+  <!-- ============================ GALERIA / INÍCIO -->
+  <section id="screen-home" class="screen home" aria-labelledby="home-title">
+    <header class="bar">
+      <div class="brand"><span class="crest" aria-hidden="true"></span><span class="brand-text">Traço &amp; Tom</span></div>
+      <div class="bar-actions">
+        <span class="chip" title="Estrelinhas"><span class="chip-icon">★</span><b id="stars-chip">0</b></span>
+        <span class="chip" title="Ilustrações concluídas"><span class="chip-icon">✓</span><b id="collected-chip">0/31</b></span>
+        <button id="btn-settings-home" class="icon-btn" type="button" aria-label="Configurações">⚙</button>
+      </div>
+    </header>
+
+    <div class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Colorir por números · <span id="art-count">31</span> ilustrações originais</p>
+        <h1 id="home-title">Um reino para pintar<br><em>no seu ritmo</em></h1>
+        <p class="lede">Siga os números, revele cada detalhe e guarde estrelinhas. Funciona offline, no avião e na sala de espera.</p>
+        <div class="hero-cta">
+          <button id="btn-start" class="btn primary big" type="button">Continuar pintando</button>
+          <button id="btn-gallery" class="btn ghost" type="button">Ver galeria</button>
+        </div>
+      </div>
+      <div class="hero-art" id="hero-art" aria-hidden="true"></div>
+    </div>
+
+    <section class="progress-card">
+      <div class="progress-row"><b>Progresso do reino</b><span id="home-progress-label">0 de 31 ilustrações concluídas</span></div>
+      <div class="track"><div id="home-progress"></div></div>
+      <button id="daily-bonus" class="btn gift" type="button"><span class="gift-icon" aria-hidden="true">🎁</span><span>Receber +20 estrelinhas</span></button>
+    </section>
+
+    <nav class="pack-tabs" id="pack-tabs" role="tablist" aria-label="Packs de ilustrações"></nav>
+    <p class="gallery-note" id="gallery-note"></p>
+    <div class="gallery" id="gallery"></div>
+
+    <footer class="home-foot">
+      <span>Traço &amp; Tom · <span id="app-version">v2.0.0</span></span>
+      <span class="links">
+        <button id="btn-info" class="linkbtn" type="button">Sobre &amp; privacidade</button>
+      </span>
+    </footer>
+  </section>
+
+  <!-- ============================ MESA DE PINTURA -->
+  <main id="screen-game" class="screen game" hidden>
+    <header class="bar">
+      <button id="btn-back" class="btn ghost small" type="button">← Galeria</button>
+      <div class="bar-actions">
+        <span class="chip"><span class="chip-icon">★</span><b id="stars-chip-game">0</b></span>
+        <button id="btn-settings-game" class="icon-btn" type="button" aria-label="Configurações">⚙</button>
+      </div>
+    </header>
+
+    <div class="board">
+      <div class="board-head">
+        <div><h2 id="drawing-title">—</h2><p id="drawing-blurb" class="muted"></p></div>
+        <div class="progress-wrap">
+          <div class="track slim"><div id="progress-fill"></div></div>
+          <span id="progress-text" class="mono">0 de 0</span>
+        </div>
+      </div>
+
+      <div class="paper" id="paper">
+        <svg id="picture" viewBox="0 0 400 400" role="group" aria-label="Ilustração dividida em regiões numeradas" xmlns="http://www.w3.org/2000/svg"></svg>
+      </div>
+
+      <p id="hint-line" class="hint-line" aria-live="polite">Escolha uma cor e toque numa área.</p>
+
+      <div class="tools">
+        <button id="btn-toggle-numbers" class="tool" type="button" aria-pressed="true"><span>123</span><small>Números</small></button>
+        <button id="btn-mode" class="tool" type="button" aria-pressed="false"><span>✎</span><small id="mode-label">Modo Guia</small></button>
+        <button id="btn-hint" class="tool" type="button"><span>★</span><small>Dica</small></button>
+        <button id="btn-undo" class="tool" type="button"><span>↶</span><small>Desfazer</small></button>
+        <button id="btn-reset" class="tool" type="button"><span>↺</span><small>Reiniciar</small></button>
+        <span class="zoom-group">
+          <button id="btn-zoom-out" class="tool iconly" type="button" aria-label="Diminuir zoom">−</button>
+          <input id="zoom-range" type="range" min="70" max="150" step="5" value="100" aria-label="Zoom">
+          <button id="btn-zoom-in" class="tool iconly" type="button" aria-label="Aumentar zoom">+</button>
+          <b id="zoom-value">100%</b>
+        </span>
+      </div>
+
+      <section class="palette-card">
+        <div id="selection" class="selection">Cor ativa: <strong>1</strong></div>
+        <div class="palette" id="palette" role="group" aria-label="Paleta de cores"></div>
+        <p id="feedback" class="feedback" aria-live="polite">Escolha uma cor e toque numa área.</p>
+      </section>
+    </div>
+  </main>
+
+  <!-- ============================ MODAIS -->
+  <div id="modal-victory" class="modal" role="dialog" aria-modal="true" aria-labelledby="victory-title" hidden>
+    <div class="card victory">
+      <div class="party" aria-hidden="true">✦ ★ ✦</div>
+      <h2 id="victory-title">Ilustração concluída!</h2>
+      <div class="victory-art" id="victory-art"></div>
+      <p id="victory-stars" class="muted"></p>
+      <div class="row">
+        <button id="btn-next" class="btn primary" type="button">Próxima ilustração</button>
+        <button id="btn-replay" class="btn ghost" type="button">Pintar de novo</button>
+      </div>
+      <button id="btn-home-from-victory" class="btn text" type="button">Voltar à galeria</button>
+    </div>
+  </div>
+
+  <div id="modal-settings" class="modal" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="card">
+      <div class="card-head"><h2 id="settings-title">Configurações</h2>
+        <button id="btn-close-settings" class="close" type="button" aria-label="Fechar">✕</button></div>
+
+      <div class="setting"><span>🎵 Música de fundo</span><label class="switch"><input id="toggle-music" type="checkbox" checked><span class="slider"></span></label></div>
+      <div class="setting"><span>🔔 Efeitos sonoros</span><label class="switch"><input id="toggle-sfx" type="checkbox" checked><span class="slider"></span></label></div>
+      <div class="setting"><span>📳 Vibração ao pintar</span><label class="switch"><input id="toggle-vibrate" type="checkbox" checked><span class="slider"></span></label></div>
+      <div class="slider-row"><label for="volume-range">🔊 Volume</label><input id="volume-range" type="range" min="0" max="100" step="5" value="30"><b id="volume-value">30%</b></div>
+
+      <div class="premium">
+        <h3>Remover anúncios</h3>
+        <p class="status" id="premium-state">Não comprado</p>
+        <p class="muted" id="premium-note"></p>
+        <div class="row"><button id="btn-remove-ads" class="btn primary" type="button">Comprar (uma vez)</button>
+          <button id="btn-restore" class="btn ghost" type="button">Restaurar compra</button></div>
+      </div>
+
+      <div class="setting danger"><button id="btn-reset-data" class="btn text" type="button">Apagar progresso salvo</button></div>
+      <button id="btn-done-settings" class="btn primary wide" type="button">Pronto</button>
+    </div>
+  </div>
+
+  <div id="modal-unlock" class="modal" role="dialog" aria-modal="true" hidden>
+    <div class="card">
+      <h2 id="unlock-title">Desbloqueie este pack</h2>
+      <p id="unlock-body" class="muted"></p>
+      <div class="stack">
+        <button id="unlock-ad-btn" class="btn primary" type="button">▶ Assistir um anúncio curto</button>
+        <button id="unlock-stars-btn" class="btn ghost" type="button"><span id="unlock-stars">Gastar estrelinhas</span></button>
+        <button id="unlock-premium-btn" class="btn text" type="button">Remover anúncios (libera tudo)</button>
+        <button class="btn text" type="button" data-close onclick="document.getElementById('modal-unlock').hidden=true">Agora não</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-cost" class="modal" role="dialog" aria-modal="true" hidden>
+    <div class="card">
+      <h2 id="cost-title">Dica</h2>
+      <p id="cost-body" class="muted"></p>
+      <div class="row">
+        <button id="cost-ok" class="btn primary" type="button">Confirmar</button>
+        <button id="cost-alt" class="btn ghost" type="button">Assistir anúncio</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-info" class="modal" role="dialog" aria-modal="true" hidden>
+    <div class="card">
+      <div class="card-head"><h2>Sobre &amp; privacidade</h2>
+        <button id="btn-close-info" class="close" type="button" aria-label="Fechar">✕</button></div>
+      <p class="muted">Todas as ilustrações deste jogo são desenhos vetoriais originais criados em código — nada é foto ou arte gerada por IA. O progresso fica salvo apenas neste aparelho.</p>
+      <ul class="info-list">
+        <li><b>Coleta de dados:</b> nenhuma conta, nenhum servidor. Estatísticas de pintura ficam no armazenamento local.</li>
+        <li><b>Publicidade:</b> quando ativa, usa Google AdMob com segmentação limitada para público infantil.</li>
+        <li><b>Privacidade completa:</b> <a href="privacy.html">privacy.html</a></li>
+        <li><b>Suporte:</b> <a href="support.html">support.html</a></li>
+      </ul>
+      <button class="btn primary wide" type="button" id="btn-info-close-2" onclick="document.getElementById('modal-info').hidden=true">Fechar</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+  <div id="web-ad-slot" class="ad-slot" hidden>
+    <span>Publicidade</span>
+    <div class="ad-frame" data-ad="banner"></div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/store.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/art-core.js"></script>
+  <script src="js/art-library.js"></script>
+  <script src="js/ads.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    /* O service worker só faz sentido no site/PWA. Dentro do app Android o Capacitor já
+       serve estes arquivos do disco, e um worker registrado continua interceptionando o
+       carregamento do index.html nas aberturas seguintes: sobra cópia velha do bundle
+       misturada com o código novo e a tela inicial fica muda. Aqui a gente deixa de
+       registrar e limpa qualquer registro que um app antigo tenha deixado no aparelho. */
+    if ('serviceWorker' in navigator) {
+      if (window.Capacitor) {
+        navigator.serviceWorker.getRegistrations()
+          .then(rs => { rs.forEach(r => r.unregister()); return caches.keys(); })
+          .then(ks => ks.forEach(k => caches.delete(k).catch(() => { })))
+          .catch(() => { });
+      } else {
+        addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+      }
+    }
+  </script>
+</body>
+</html>

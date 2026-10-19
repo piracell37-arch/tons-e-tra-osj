@@ -1,0 +1,55 @@
+Traço & Tom — dois caminhos para publicar
+docs/APK.md   = APK por conta propria (nao paga nada, nao passa por revisao)  <-- seu plano agora
+docs/PLAY-STORE.md = Google Play (custa US$ 25 na conta de desenvolvedor)
+
+===========================================================================
+CAMINHO DO APK — o que voce roda
+===========================================================================
+  npm install
+  npm run android:add
+  npm run android:sync
+  npm run android:prepare    (gera icones/splash + aplica permissoes, AdMob, nome e versao)
+  npm run android:apk        (APK de teste)
+      -> android\app\build\outputs\apk\debug\app-debug.apk
+
+APK assinado para mandar para outras pessoas: secoes 3 e 4 de docs/APK.md
+(keystore fora do projeto, senhas so por variavel de ambiente).
+
+Fora da Play a compra "remover anuncios" NAO funciona — o faturamento da Play
+so atende app instalado pela loja. O config ja esta em billing: 'none', entao os
+botoes de compra aparecem ocultos. Anuncio (AdMob) continua funcionando e a conta
+do AdMob e gratis.
+
+===========================================================================
+CAMINHO DA PLAY — os mesmos comandos, mas troca android:apk por
+===========================================================================
+  npm run android:open       (Android Studio > Build > Generate Signed Bundle > AAB)
+e segue a secao 6 de docs/PLAY-STORE.md (ficha, Data Safety, classificacao).
+La voce precisa voltar billing para 'play' e criar o produto remove_ads_once.
+
+===========================================================================
+OBRIGATORIO TROCAR ANTES DE SOLTAR QUALQUER VERSAO
+===========================================================================
+  www/js/config.js       -> supportEmail (ainda e placeholder) e os 4 IDs do AdMob
+                            (ainda sao os IDs de TESTE do Google, nao geram receita)
+  www/privacy.html       -> o e-mail entre colchetes
+  www/support.html       -> o e-mail entre colchetes
+  capacitor.config.json  -> plugins.AdMob.appId (o script copia para o AndroidManifest)
+  depois das trocas: npm run site  e republique a pasta site/  (a pagina publicada
+  ainda mostra o placeholder de e-mail)
+
+===========================================================================
+O QUE JA ESTA PRONTO (config atual = publico "para todos os publicos")
+===========================================================================
+  - icone em todas as densidades, adaptive icon e splash PNG  -> resources/android/
+  - icone 512x512 da ficha                                    -> resources/play/store-icon-512.png
+  - politica de privacidade NO AR:
+      https://reino-encantado-hkno7apunhd.qoder.website/privacidade.html
+  - alvo de API 36 (Capacitor 8)
+  - billing: 'none'            — compra oculta (fora da Play)
+  - childDirected: false       — anunc. personalizados liberados
+  - interstitialsEnabled: true — so toca depois de um toque na tela de vitoria
+
+  Se um dia declarar Families na Play: childDirected: true e interstitialsEnabled: false.
+
+Monetizacao e como sacar o dinheiro: docs/MONETIZACAO.md

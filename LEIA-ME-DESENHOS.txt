@@ -1,0 +1,13 @@
+ARTE DO JOGO — LEIA README.md E www/js/art-library.js
+
+Este arquivo descrevia os desenhos em JPG que vieram na versão anterior do pacote.
+ELES FORAM REMOVIDOS: o jogo não usa mais nenhuma imagem externa (nem foto, nem arte
+gerada por inteligência artificial).
+
+As 31 ilustrações são vetores originais gerados por código:
+  www/js/art-core.js     -> geometria (arcos, petalas, aneis, estrelas)
+  www/js/art-library.js  -> as artes, em 4 packs (jardim, mar, fantasia, doces)
+  tools/art-check.html   -> validacao da arte (fora do app; abra no navegador ao editar)
+
+Para desenhar uma arte nova, copie um bloco def({...}) existente e rode a pagina de
+validacao: ela acusa regiao fora da tela, cor sem uso e numero colado em outro numero.

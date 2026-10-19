@@ -1,0 +1,14 @@
+Traço & Tom — COMO EXECUTAR CORRETAMENTE
+
+1. Extraia toda a pasta do ZIP.
+2. Entre na pasta atelie-playstore.
+3. Dê dois cliques em INICIAR-JOGO.bat.
+4. Mantenha a janela preta aberta enquanto joga.
+5. O navegador abrirá http://localhost:8000.
+
+Isso evita o erro de segurança do Chrome ao abrir index.html diretamente via file://.
+É necessário ter Python instalado no Windows (python.org). Se a porta 8000 estiver ocupada,
+feche outro servidor local antes de tentar novamente.
+
+Para Android/Capacitor, este arquivo .bat é apenas para testar no computador; no app instalado,
+a correção deve ser feita no ambiente do app e as imagens devem estar empacotadas localmente.

@@ -1,0 +1,24 @@
+{
+  "appId": "br.com.reinoencantado.cores",
+  "appName": "Traço & Tom",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": false,
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#f4f1e8"
+  },
+  "plugins": {
+    "StatusBar": {
+      "overlaysWebView": false,
+      "style": "DARK",
+      "backgroundColor": "#203a5c"
+    },
+    "AdMob": {
+      "appId": "ca-app-pub-9963092807242586~9730329908"
+    }
+  }
+}
